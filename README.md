@@ -1,49 +1,29 @@
-# Conteneurisation MERN
+# TP4 : Docker et Docker Compose — Application MERN (`MyAppReact`)
 
-Le projet contient une API Express, un client React construit avec Vite et une base MongoDB. Docker Compose orchestre les trois services sur le réseau `mern-network`. Les données MongoDB sont persistées dans le volume `mongo_data`.
+Ce projet correspond au **TP4 (Introduction au DevOps — 3e année LIG, ISG Sousse)** sur la conteneurisation et l'orchestration d'une application MERN (`MongoDB`, `Express`, `React`, `Node.js`) avec **Docker**, **Docker Compose** et **Jenkins**.
 
-## Prérequis
+## Structure du projet
 
-- Docker avec Docker Compose (commande `docker compose`)
+- `client/` : Application frontend React et son `Dockerfile` (expose le port `3000`).
+- `server/` : API backend Express/Node.js et son `Dockerfile` (expose le port `9000`, utilise `MONGO_URI`).
+- `docker-compose.yml` : Orchestration des services `mongodb`, `server` et `client` sur le réseau `mern-network` (`bridge`).
+- `README.md` : Documentation des étapes réalisées.
 
-## Construire les images séparément
+## Étapes réalisées
 
-Depuis la racine du projet :
+1. **Clonage et fork du dépôt** : Récupération du projet `MyAppReact` (`client` et `server`) dans mon propre dépôt GitHub.
+2. **Création des Dockerfiles** :
+   - `server/Dockerfile` basé sur `node:lts-alpine`, installation des dépendances (`npm install`), exposition du port `9000` et démarrage avec `npm start`.
+   - `client/Dockerfile` basé sur `node:lts-alpine`, build de l'application (`npm run build`), installation d'un serveur léger (`serve`), exposition du port `3000` et lancement du serveur sur les fichiers de build.
+3. **Réseau et exécution des conteneurs** :
+   - Création du réseau `mern-network` (`docker network create mern-network`).
+   - Lancement des conteneurs `mongodb`, `server` (`9000:9000`) et `client` (`3000:3000`) connectés à `mern-network`.
+4. **Configuration de `docker-compose.yml`** : Définition des services `mongodb`, `server` et `client`, de la variable d'environnement `MONGO_URI`, des dépendances (`depends_on`) et du réseau `mern-network` en mode `bridge`.
+5. **Automatisation avec Jenkins** : Mise en place d'un pipeline Jenkins récupérant le dépôt GitHub et exécutant le build / lancement des conteneurs.
 
-```powershell
-docker build -t mern-server ./Server
-docker build -t mern-client ./Client
-```
+## Commandes utiles
 
-Le serveur écoute sur le port 9000. Le client Vite est construit puis servi sur le port 3000. Compose fournit au serveur `MONGO_URI=mongodb://mongodb:27017/mern_app`.
+Lancer l'application avec Docker Compose :
 
-## Démarrer avec Compose
-
-```powershell
-docker compose up --build -d
-```
-
-Ouvrir le client à <http://localhost:3000> et l’API à <http://localhost:9000/api/health>.
-
-## Consulter les logs
-
-```powershell
-docker compose logs -f
-```
-
-Pour suivre un seul service, utiliser par exemple `docker compose logs -f server`.
-
-## Arrêter les services
-
-```powershell
-docker compose down
-```
-
-Cette commande conserve le volume de données MongoDB. Pour supprimer aussi les données persistées, utiliser `docker compose down -v`.
-
-## Fichiers Docker
-
-- `Server/Dockerfile` installe les dépendances serveur puis lance `npm start`.
-- `Client/Dockerfile` construit les fichiers statiques Vite dans `dist/` et les sert avec `serve` sur le port 3000.
-- Les fichiers `.dockerignore` excluent notamment les dépendances locales, les fichiers `.env`, les logs et les répertoires de build du contexte Docker.
-- `docker-compose.yml` configure MongoDB, le serveur, le client, le réseau partagé et le volume persistant.
+```bash
+docker compose up -d --build
