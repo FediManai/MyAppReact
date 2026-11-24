@@ -1,0 +1,45 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  server:
+    build: ./Server
+    container_name: server
+    ports:
+      - "9000:9000"
+    networks:
+      - mern-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/mern_app
+
+  client:
+    build: ./Client
+    container_name: client
+    ports:
+      - "3000:3000"
+    networks:
+      - mern-network
+    depends_on:
+      - server
+
+networks:
+  mern-network:
+    name: mern-network
+    driver: bridge
+
+volumes:
+  mongo_data:

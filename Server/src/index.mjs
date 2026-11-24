@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 dotenv.config();  // Charge les variables d'environnement à partir d'un fichier .env
 
@@ -16,6 +17,14 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.json({ message: 'API is running' });
 });
+
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  throw new Error('MONGO_URI must be set');
+}
+
+await mongoose.connect(MONGO_URI);
+console.log('Connected to MongoDB');
 
 // Démarrer le serveur sur le port 9000
 const PORT = process.env.PORT || 9000;
